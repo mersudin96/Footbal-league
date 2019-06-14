@@ -2,7 +2,7 @@
  * league.h
  *
  *  Created on: Jun 4, 2019
- *      Author: mersudin
+ *      Author: Mersudin Hajdarević
  */
 
 #ifndef LEAGUE_H_
@@ -16,24 +16,39 @@
 
 
 class League{
-public:
+private:
 	std::string name;
 	std::string country;
 	std::vector <Team> tms;
-	std::vector<Match> playedMatches;
-	std::list<Match> notPlayedMatches;
+	std::vector<Match> playedMatches;	// umjesto stack zbog potrebe prolaska kroz cijelu kolekciju
+	std::list<Match> notPlayedMatches; // umjesto queue iz istog razloga
 
+public:
 	League();
 	League(std::string, std::string);
 
 	void generateMatches();
-	void printNextScheduledMatch() const;
+	void printNextScheduledMatch() const ;
 	void printPlayedMatches();
 	void printNotPlayedMatches();
 	void cancelLastMatch();
 	void printTeamPlayedMatches(const std::string&);
 	void printTeamNotPlayedMatches(const std::string&);
 	void printPointsTable();
+	int indexOfTeam(const std::string&);
+	int longestTeamName();
+	int longestJudgeName();
+
+	const std::string& getCountry() const;
+	void setCountry(const std::string& country);
+	const std::string& getName() const;
+	void setName(const std::string& name);
+	std::list<Match>& getNotPlayedMatches();
+	void setNotPlayedMatches(std::list<Match>& notPlayedMatches);
+	std::vector<Match>& getPlayedMatches();
+	void setPlayedMatches(const std::vector<Match>& playedMatches);
+	std::vector<Team>& getTms();
+	void setTms(const std::vector<Team>& tms);
 };
 
 #endif /* LEAGUE_H_ */

@@ -10,7 +10,7 @@ using namespace std;
 
 vector <Team> teams;
 vector <Judge> judges;
-unordered_map <string, League> leagues;
+unordered_multimap <string, League> leagues; // više liga u jednoj državi
 
 void addTeam();
 void addJudge();
@@ -26,22 +26,38 @@ string welcome_msg = "1. Add new team \n2. Add new judge \n3. Add new league \n4
 
 int main(int argc, char **argv) {
 	srand(time(NULL));
-
 	int choice;
 	do{
-		cout<<welcome_msg<<endl;
-		cin>>choice;
-		switch(choice){
-			case 0: break;
-			case 1: addTeam(); break;
-			case 2: addJudge(); break;
-			case 3: addLeague(); break;
-			case 4: playMatch(); break;
-			case 5: cancelLastMatch(); break;
-			case 6: printTeamInfo(); break;
-			case 7: dispResTable(); break;
-			case 8: printAllMatchesAllLeagues(); break;
-			default: cout<<"Wrong input! Try again.\n\n"; break;
+
+		try{
+			cout<<welcome_msg<<endl;
+			cin>>choice;
+			if(cin.fail())
+				throw string("Please enter a number!\n");
+			cin.ignore();
+
+			switch(choice){
+				case 0: break;
+				case 1: addTeam(); break;
+				case 2: addJudge(); break;
+				case 3: addLeague(); break;
+				case 4: playMatch(); break;
+				case 5: cancelLastMatch(); break;
+				case 6: printTeamInfo(); break;
+				case 7: dispResTable(); break;
+				case 8: printAllMatchesAllLeagues(); break;
+				default: cout<<"Wrong input! Try again.\n\n"; break;
+			}
+		}catch(string& s){
+			cout<<s<<endl;
+			cin.clear();
+			cin.ignore();
+			choice = -1;
+		}catch(...){
+			cout<<"\tUps! Something went wrong...!"<<endl<<endl;
+			cin.clear();
+			cin.ignore();
+			choice = -1;
 		}
 
 	}while(choice);
@@ -51,9 +67,15 @@ int main(int argc, char **argv) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void addTeam(){
-	cout<<"Enter name, country, city and stadion name: "<<endl;
 	string a,b,c,d;
-	cin>>a>>b>>c>>d;
+	cout<<"Enter name: ";
+	getline(cin,a);
+	cout<<"Country: ";
+	getline(cin,b);
+	cout<<"city: ";
+	getline(cin,c);
+	cout<<"Stadion name: ";
+	getline(cin,d);
 	Team temp(a,b,c,d);
 	string n;
 
@@ -73,8 +95,12 @@ void addTeam(){
 
 void addJudge(){
 	Judge temp;
-	cout<<"Enter name, lastname of judge and country he is comeing from: "<<endl;
-	cin>>temp.name>>temp.lastName>>temp.country;
+	cout<<"Enter judge name: ";
+	getline(cin,temp.name);
+	cout<<"Lastname: ";
+	getline(cin,temp.lastName);
+	cout<<"Country he is comeing from: ";
+	getline(cin,temp.country);
 
 	bool exist = false;
 	for(unsigned int i=0; i<judges.size(); ++i){
@@ -91,77 +117,115 @@ void addJudge(){
 }
 
 void addLeague(){
-	cout<<"Enter name and country of league: ";
-	string n,c;
-	cin>>n>>c;
-	League l(n,c);
+	try{
+		string n,c;
+		cout<<"Enter name: ";
+		getline(cin,n);
+		cout<<"Country of league: ";
+		getline(cin,c);
+		League l(n,c);
 
-	if(leagues.size()){
-		unordered_map<string,League>::const_iterator it = leagues.find(c);
-		if(it!=leagues.end()){
-			cout<<"League already exist!"<<endl<<endl;
-			return;
+		if(leagues.size()){
+			unordered_map<string,League>::const_iterator it = leagues.find(c);
+			if(it!=leagues.end() && it->second.getName() == n){
+				cout<<"League already exist!"<<endl<<endl;
+				return;
+			}
 		}
+		leagues.insert(make_pair(c,l));
+		cout<<"League successfully added!"<<endl<<endl;
+	}catch(string& s){
+		cout<<s<<endl<<endl;
+		return;
 	}
-	leagues[l.country] = l;
-	cout<<"League successfully added!"<<endl<<endl;
 }
 
 void playMatch(){
+	string c,n;
 	cout<<"Enter country: ";
-	string c;
-	cin>>c;
-	unordered_map<string,League>::const_iterator iter = leagues.find(c);
+	getline(cin,c);
+
+	unordered_multimap<string,League>::iterator iter = leagues.find(c);
 	if(iter == leagues.end()){
 		cout<<"League dont exist"<<endl<<endl;
 		return;
 	}else{
-		leagues[c].printNextScheduledMatch();
+		try{
+			cout<<"League: ";
+			getline(cin,n);
+			bool exist = false;
+			auto range = leagues.equal_range(c);
+			string x;
+			for(auto it = range.first; it!=range.second; ++it){
+				x = it->second.getName();
+				if(x == n){
+					iter = it;
+					exist = true;
+					break;
+				}
+			}
+			if(!exist){
+				cout<<"League doesn't exist!"<<endl<<endl;
+				return;
+			}
+			iter->second.printNextScheduledMatch();
 
-		int a,b;
-		cout<<"Team1 score: ";
-		cin>>a;
-		cout<<"Team2 score: ";
-		cin>>b;
+			int a,b;
+			cout<<"Team1 score: ";
+			cin>>a;
+			if(cin.fail())
+				throw string("Wrong input!");
+			cout<<"Team2 score: ";
+			cin>>b;
+			if(cin.fail())
+				throw string("Wrong input!");
 
-		string rez = to_string(a) +":" +to_string(b);
-		auto it = leagues[c].notPlayedMatches.begin();
+			pair<int,int> rez(a,b);
+			auto it = iter->second.getNotPlayedMatches().begin();
 
-		int index1 = -1, index2 = -1;
-		for(size_t i=0; i<leagues[c].tms.size(); ++i){
-			if(leagues[c].tms[i] == it->team1)
-				index1 = i;
-			if(leagues[c].tms[i] == it->team2)
-				index2 = i;
-			if(index1 != -1 && index2 != -1)
-				break;
-		}
-		if(a>b){
-			leagues[c].tms[index1].points+=3;
-			it->team1.points+=3;
-		}
-		else if(b>a){
-			it->team2.points+=3;
-			leagues[c].tms[index2].points+=3;
-		}
-		else{
-			it->team1.points+=1;
-			it->team2.points+=1;
-			leagues[c].tms[index1].points+=1;
-			leagues[c].tms[index2].points+=1;
-		}
+			int index1 = -1, index2 = -1;
+			for(size_t i=0; i<iter->second.getTms().size(); ++i){
 
-		leagues[c].notPlayedMatches.front().result = rez;
-		leagues[c].playedMatches.push_back(leagues[c].notPlayedMatches.front());
-		leagues[c].notPlayedMatches.erase(it);
-		cout<<"Match finished!"<<endl<<endl;
+				if(iter->second.getTms()[i] == it->team1)
+					index1 = i;
+				if(iter->second.getTms()[i] == it->team2)
+					index2 = i;
+				if(index1 != -1 && index2 != -1)
+					break;
+			}
+			if(a>b){
+				iter->second.getTms()[index1].addPoints(3);
+				int a = 3;
+				it->team1.addPoints(a);
+			}
+			else if(b>a){
+				it->team2.points+=3;
+				iter->second.getTms()[index2].addPoints(3);
+			}
+			else{
+				it->team1.points+=1;
+				it->team2.points+=1;
+				iter->second.getTms()[index1].addPoints(1);
+				iter->second.getTms()[index2].addPoints(1);
+			}
+
+			iter->second.getNotPlayedMatches().front().result = rez;
+			Match c = iter->second.getNotPlayedMatches().front();
+			iter->second.getPlayedMatches().push_back(c);
+			iter->second.getNotPlayedMatches().erase(it);
+			cout<<"Match finished!"<<endl<<endl;
+
+		}catch(string& s){
+			cout<<s<<endl<<endl;
+		}
 	}
 
 }
 
 void printAllMatchesAllLeagues(){
 	for(auto it = leagues.begin(); it!=leagues.end(); it++){
-		cout<<"\t\t~"<<it->first<<" league~"<<endl<<"\t     ******************"<<endl;
+		cout<<"Country: "<<it->first<<endl<<endl;
+		cout<<"\t\t~"<<it->second.getName()<<" league~"<<endl<<"\t     ******************"<<endl;
 		it->second.printPlayedMatches();
 		it->second.printNotPlayedMatches();
 		cout<<endl<<endl;
@@ -171,25 +235,81 @@ void printAllMatchesAllLeagues(){
 void cancelLastMatch(){
 	cout<<"Enter country where you want to cancel last match: ";
 	string c;
-	cin>>c;
-	leagues[c].cancelLastMatch();
+	getline(cin,c);
+	auto it = leagues.find(c);
+	if(it == leagues.end()){
+		cout<<"No such country in league!"<<endl;
+		return;
+	}else{
+		auto r = leagues.equal_range(c);
+		cout<<"Enter league name: "<<endl;
+		string n;
+		getline(cin,n);
+		bool exist = false;
+		for(auto it2 = r.first; it2!=r.second; it2++){
+			if(it2->second.getName() == n){
+				it = it2;
+				exist = true;
+				break;
+			}
+		}
+		if(exist)
+			it->second.cancelLastMatch();
+		else
+			cout<<"That league doesn't exist!"<<endl<<endl;
+	}
 }
 
 void printTeamInfo(){
-	cout<<"Enter country of team and team name: ";
 	string c,n;
-	cin>>c>>n;
-	leagues[c].printTeamPlayedMatches(n);
-	leagues[c].printTeamNotPlayedMatches(n);
+	cout<<"Enter country of team: ";
+	getline(cin,c);
+	cout<<"Team name: ";
+	getline(cin,n);
+	auto it = leagues.find(c);
+	if(it == leagues.end()){
+		cout<<"No such country in league!"<<endl;
+		return;
+	}else{
+		auto r = leagues.equal_range(c);
+		bool teamExist = false;
+		for(auto it2 = r.first; it2!= r.second; ++it2){
+			for(size_t i= 0; i<it2->second.getTms().size(); ++i){
+				if(it2->second.getTms()[i].name == n){
+					cout<<"\nName: "<<it2->second.getTms()[i].name<<endl;
+					cout<<"\nCountry: "<<it->second.getTms()[i].country<<endl;
+					cout<<"\nCity: "<<it->second.getTms()[i].city<<endl;
+					cout<<"\nStadion: "<<it->second.getTms()[i].stadionName<<endl;
+					cout<<"\nPoints: "<<it->second.getTms()[i].points<<endl<<endl;
+					it2->second.printTeamPlayedMatches(n);
+					it2->second.printTeamNotPlayedMatches(n);
+					teamExist = true;
+					break;
+				}
+			}
+		}
+		if(!teamExist)
+			cout<<"Team is not in any league!"<<endl;
+	}
 }
 
 void dispResTable(){
 	cout<<"Enter country of league: "<<endl;
 	string s;;
-	cin>>s;
+	getline(cin,s);
 	auto it = leagues.find(s);
-	if(it != leagues.end())
-		leagues[s].printPointsTable();
+	if(it != leagues.end()){
+		cout<<"Enter league name: "<<endl;
+		string l;
+		getline(cin,l);
+		auto r = leagues.equal_range(s);
+		for(auto i = r.first;  i!=r.second; ++i){
+			if(i->second.getName() == l){
+				i->second.printPointsTable();
+			}
+		}
+	}
 	else
 		cout<<"No such country in league!"<<endl<<endl;
 }
+

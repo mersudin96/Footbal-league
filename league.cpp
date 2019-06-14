@@ -1,17 +1,16 @@
 #include "league.h"
-#include "date.h"
-#include "match.h"
 #include <iostream>
 #include <algorithm>
+#include <exception>
 using namespace std;
 
 extern vector <Team> teams;
 extern vector <Judge> judges;
 
-string dashedLine = "-----------------------------------------------------------";
-string line = "___________________________________________________________\n";
-string longerDashedLine = "-----------------------------------------------------------------------";
-string longerLine = "_______________________________________________________________________\n";
+string dashedLine(70, '-');
+string line(70, '_');
+string longerDashedLine(85, '-');
+string longerLine(85, '_');
 
 
 League::League() { tms = teams; }
@@ -24,6 +23,16 @@ League::League(string n, string c) : name(n), country(c){
 }
 
 void League::generateMatches(){
+	if(!judges.size())
+		throw string("Zovi sudca inače ti neće imat ko sudit.");
+	int judgesFromSameCountry = 0;
+	for(size_t i=0; i<judges.size(); ++i){
+		if(judges[i].country == country)
+			judgesFromSameCountry++;
+	}
+	if(judgesFromSameCountry<2)
+		throw string("Trebo bi razmislit da zovneš kojeg sudca iz druge države...");
+
 	srand(time(NULL));
 	Date d(1,1,2019);
 	Judge c,c2;
@@ -58,26 +67,70 @@ void League::generateMatches(){
 }
 
 void League::printNextScheduledMatch() const {
-	Match m = notPlayedMatches.front();
-	cout<<"\n\nTeam1 \t\tTeam2 \tJudge \tJudge2 \tDate\n"<<line<<endl;
-	std::cout<<m.team1.name<<"\t\t"<<m.team2.name<<"\t"<<m.mainJudge.name<<"\t"<<m.helpJudge.name<<"\t"<<m.date.day<<"."<<m.date.month<<"."<<m.date.year<<endl;
-	cout<<dashedLine<<endl<<dashedLine<<endl;
+	if(notPlayedMatches.size()){
+		Match m = notPlayedMatches.front();
+		int sizeT1 = m.team1.name.size();
+		int sizeT2 = m.team2.name.size();
+		int sizeMJ = m.mainJudge.name.size();
+		int sizeHJ = m.helpJudge.name.size();
+		string s = "    ";
+		string s1(sizeT1+s.size()-5, ' ');
+		string s2(sizeT2+s.size()-5, ' ');
+		string s3(sizeMJ+s.size()-5, ' ');
+		string s4(sizeHJ+s.size()-5, ' ');
+
+		cout<<"\n\nTeam1"<<s1<<"Team2"<<s2<<"Judge"<<s3<<"Judge2"<<s4<<"Date\n"<<line<<endl<<endl;
+		cout<<m.team1.name<<s<<m.team2.name<<s<<m.mainJudge.name<<s<<m.helpJudge.name<<s<<m.date.day<<"."<<m.date.month<<"."<<m.date.year<<endl;
+		cout<<dashedLine<<endl<<dashedLine<<endl;
+	}else{
+		throw string("None matches are scheduled...");
+	}
 }
 
 void League::printPlayedMatches(){
-	cout<<"\n\nTeam1 \t\tTeam2 \tJudge \t\tDate \t\tResult\n"<<line<<endl;
+	string spaceLT(longestTeamName(), ' ');
+	string spaceLJ(longestJudgeName(), ' ');
+	string s = "   ";
+	spaceLT += s;
+	spaceLJ += s;
+
+	string spaceTitleT1T2(spaceLT.size()-5+s.size(), ' ');
+	string spaceTitleT2J(spaceLT.size()-5, ' ');
+	string spaceTitleJD(spaceLJ.size()-5, ' ');
+
+	string title = "\n\nTeam1" + spaceTitleT1T2 +"Team2" + spaceTitleT2J +"Judge" +spaceTitleJD +"Date\tResult\n";
+	cout<<title<<line<<endl<<endl;
+
 	for(size_t i=0; i<playedMatches.size(); ++i){
-		cout<<playedMatches[i].team1.name<<"\t\t"<<playedMatches[i].team2.name<<"\t"<<playedMatches[i].mainJudge.name<<"\t"
-				<<playedMatches[i].date.to_string()<<"\t"<<playedMatches[i].result<<endl;
+		string spaceT1T2(spaceLT.size()-playedMatches[i].team1.name.size() + s.size(), ' ');
+		string spaceT2J(longestTeamName()-playedMatches[i].team2.name.size()+s.size(), ' ');
+		string spaceJD(longestJudgeName()-playedMatches[i].mainJudge.name.size()+s.size(), ' ');
+		cout<<playedMatches[i].team1.name<<spaceT1T2<<playedMatches[i].team2.name<<spaceT2J<<playedMatches[i].mainJudge.name<<spaceJD
+				<<playedMatches[i].date.to_string()<<"\t"<<playedMatches[i].result.first<<":"<<playedMatches[i].result.second<<endl;
 		cout<<dashedLine<<endl;
 	}
 	cout<<dashedLine<<endl;
 }
 
 void League::printNotPlayedMatches(){
-	cout<<"\n\nTeam1 \tTeam2 \tJudge \tDate\n"<<line<<endl;
+	string spaceLT(longestTeamName(), ' ');
+	string spaceLJ(longestJudgeName(), ' ');
+	string s = "   ";
+	spaceLT += s;
+	spaceLJ += s;
+
+	string spaceTitleT1T2(spaceLT.size()-5+s.size(), ' ');
+	string spaceTitleT2J(spaceLT.size()-5, ' ');
+	string spaceTitleJD(spaceLJ.size()-5, ' ');
+
+	string title = "\n\nTeam1" + spaceTitleT1T2 +"Team2" + spaceTitleT2J +"Judge" +spaceTitleJD +"Date\n";
+	cout<<title<<line<<endl<<endl;
+
 	for (auto it = notPlayedMatches.begin(); it!= notPlayedMatches.end(); ++it){
-		cout<<it->team1.name<<"\t"<<it->team2.name<<"\t"<<it->mainJudge.name<<"\t"<<it->date.to_string()<<endl;
+		string spaceT1T2(spaceLT.size()-it->team1.name.size() + s.size(), ' ');
+		string spaceT2J(longestTeamName()-it->team2.name.size()+s.size(), ' ');
+		string spaceJD(longestJudgeName()-it->mainJudge.name.size()+s.size(), ' ');
+		cout<<it->team1.name<<spaceT1T2<<it->team2.name<<spaceT2J<<it->mainJudge.name<<spaceJD<<it->date.to_string()<<endl;
 		cout<<dashedLine<<endl;
 	}
 	cout<<dashedLine<<endl;
@@ -86,7 +139,19 @@ void League::printNotPlayedMatches(){
 void League::cancelLastMatch(){
 	if(playedMatches.size()){
 		Match a = playedMatches[playedMatches.size()-1];
-		a.result= "";
+		int index;
+		if(a.result.first>a.result.second){
+			a.team1.removePoints(3);
+			index = indexOfTeam(a.team1.name);
+			tms[index].removePoints(3);
+		}
+		else{
+			a.team2.removePoints(3);
+			index = indexOfTeam(a.team2.name);
+			tms[index].removePoints(3);
+		}
+		a.result.first=0;
+		a.result.second=0;
 		notPlayedMatches.push_front(a);
 		playedMatches.pop_back();
 		cout<<"Match "<<a.team1.name<<" vs "<<a.team2.name<<" has been canceled"<<endl<<endl;
@@ -94,25 +159,58 @@ void League::cancelLastMatch(){
 		cout<<"No match yet played!"<<endl<<endl;
 }
 
-void League::printTeamPlayedMatches(const string& s){
-	cout<<"\n\t\t**Played matches** \n\t       ˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇ \nTeam1 \tTeam2 \tJudgeM \t\tJudgeH \t\tDate \t\tResult"<<endl;
-	cout<<longerLine<<endl;
+void League::printTeamPlayedMatches(const string& c){
+	cout<<"\n\t\t**Played matches** \n\t       ˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇ \n";
+
+	string spaceLT(longestTeamName(), ' ');
+	string spaceLJ(longestJudgeName(), ' ');
+	string s = "   ";
+	spaceLT += s;
+	spaceLJ += s;
+
+	string spaceTitleT1T2(spaceLT.size()-5+s.size(), ' ');
+	string spaceTitleT2J(spaceLT.size()-5, ' ');
+	string spaceTitleJD(spaceLJ.size()-5, ' ');
+	string title = "\n\nTeam1" + spaceTitleT1T2 +"Team2" + spaceTitleT2J +"Judge" +spaceTitleJD+"Judge2" +spaceTitleJD +"Date\tResult\n";
+	cout<<title<<longerLine<<endl<<endl;
+
 	for (size_t i=0; i<playedMatches.size(); ++i){
-		if(playedMatches[i].team1.name == s || playedMatches[i].team2.name == s){
-			cout<<playedMatches[i].team1.name<<"\t"<<playedMatches[i].team2.name<<"\t"<<playedMatches[i].mainJudge.name<<"\t"
-					<<playedMatches[i].helpJudge.name<<"\t"<<playedMatches[i].date.to_string()<<"\t "<<playedMatches[i].result<<endl;
+		if(playedMatches[i].team1.name == c || playedMatches[i].team2.name == c){
+			string spaceT1T2(spaceLT.size()-playedMatches[i].team1.name.size() + s.size(), ' ');
+			string spaceT2J(longestTeamName()-playedMatches[i].team2.name.size()+s.size(), ' ');
+			string spaceJD(longestJudgeName()-playedMatches[i].mainJudge.name.size()+s.size(), ' ');
+			string spaceHJ(longestJudgeName()-playedMatches[i].helpJudge.name.size()+s.size(), ' ');
+			cout<<playedMatches[i].team1.name<<spaceT1T2<<playedMatches[i].team2.name<<spaceT2J<<playedMatches[i].mainJudge.name<<spaceJD
+					<<playedMatches[i].helpJudge.name<<spaceHJ<<playedMatches[i].date.to_string()<<"\t "<<
+					playedMatches[i].result.first<<":"<<playedMatches[i].result.second<<endl;
 			cout<<longerDashedLine<<endl;
 		}
 	}
 	cout<<longerDashedLine<<endl<<endl;
 }
 
-void League::printTeamNotPlayedMatches(const string& s){
-	cout<<"\n\t    **Not played mathces** \n\t   ˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇ \nTeam1 \tTeam2 \tJudgeM \t\tJudgeH \t\tDate"<<endl;
-	cout<<line<<endl;
+void League::printTeamNotPlayedMatches(const string& c){
+	cout<<"\n\t    **Not played mathces** \n\t   ˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇˇ \n";
+
+	string spaceLT(longestTeamName(), ' ');
+	string spaceLJ(longestJudgeName(), ' ');
+	string s = "   ";
+	spaceLT += s;
+	spaceLJ += s;
+
+	string spaceTitleT1T2(spaceLT.size()-5+s.size(), ' ');
+	string spaceTitleT2J(spaceLT.size()-5, ' ');
+	string spaceTitleJD(spaceLJ.size()-5, ' ');
+	string title = "\n\nTeam1" + spaceTitleT1T2 +"Team2" + spaceTitleT2J +"Judge" +spaceTitleJD +"\tJudge2 \tDate\n";
+	cout<<title<<line<<endl<<endl;
+
 	for (auto it = notPlayedMatches.begin(); it!= notPlayedMatches.end(); ++it){
-		if(it->team1.name == s || it->team2.name == s){
-			cout<<it->team1.name<<"\t"<<it->team2.name<<"\t"<<it->mainJudge.name<<"\t"<<it->helpJudge.name<<"\t"<<it->date.to_string()<<endl;
+		if(it->team1.name == c || it->team2.name == c){
+			string spaceT1T2(spaceLT.size()-it->team1.name.size() + s.size(), ' ');
+			string spaceT2J(longestTeamName()-it->team2.name.size()+s.size(), ' ');
+			string spaceJD(longestJudgeName()-it->mainJudge.name.size()+s.size(), ' ');
+			string spaceHJ(longestJudgeName()-it->helpJudge.name.size()+s.size(), ' ');
+			cout<<it->team1.name<<spaceT1T2<<it->team2.name<<spaceT2J<<it->mainJudge.name<<spaceJD<<it->helpJudge.name<<spaceHJ<<it->date.to_string()<<endl;
 			cout<<dashedLine<<endl;
 		}
 	}
@@ -121,10 +219,77 @@ void League::printTeamNotPlayedMatches(const string& s){
 
 void League::printPointsTable(){
 	sort(tms.begin(),tms.end(),[](const Team& t1, const Team& t2){return t1.points>t2.points;});
-	cout<<"Team \t Points\n_______________\n"<<endl;
+	cout<<"Team\t\tPoints\n______________________\n"<<endl;
 	for(auto el : tms){
-		cout<<el.name<<" \t "<<el.points<<endl;
-		cout<<"---------------"<<endl;
+		cout<<el.name<<"\t\t"<<el.points<<endl;
+		cout<<"----------------------"<<endl;
 	}
 	cout<<endl;
+}
+
+int League::longestTeamName(){
+	unsigned int max = 0;
+	for(size_t i=0; i<tms.size(); ++i){
+		if(tms[i].name.size()>max)
+			max = tms[i].name.size();
+	}
+	return max;
+}
+
+int League::longestJudgeName(){
+	unsigned int max = 0;
+	for(size_t i=0; i<judges.size(); ++i){
+		if(judges[i].name.size()>max)
+			max = judges[i].name.size();
+	}
+	return max;
+}
+
+int League::indexOfTeam(const string& s){
+	for(size_t i = 0; i<tms.size(); ++i){
+		if(tms[i].name == s)
+			return i;
+	}
+	return -1;
+}
+
+
+const std::string& League::getCountry() const {
+		return country;
+}
+
+void League::setCountry(const std::string& country) {
+	this->country = country;
+}
+
+const std::string& League::getName() const {
+	return name;
+}
+
+void League::setName(const std::string& name) {
+	this->name = name;
+}
+
+std::list<Match>& League::getNotPlayedMatches(){
+	return notPlayedMatches;
+}
+
+void League::setNotPlayedMatches(std::list<Match>& notPlayedMatches) {
+	this->notPlayedMatches = notPlayedMatches;
+}
+
+std::vector<Match>& League::getPlayedMatches() {
+	return playedMatches;
+}
+
+void League::setPlayedMatches(const std::vector<Match>& playedMatches) {
+	this->playedMatches = playedMatches;
+}
+
+std::vector<Team>& League::getTms(){
+	return tms;
+}
+
+void League::setTms(const std::vector<Team>& tms) {
+	this->tms = tms;
 }
