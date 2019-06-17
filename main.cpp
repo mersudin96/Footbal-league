@@ -10,7 +10,7 @@ using namespace std;
 
 vector <Team> teams;
 vector <Judge> judges;
-unordered_multimap <string, League> leagues; // više liga u jednoj državi
+unordered_multimap <string, League> leagues; // više liga u jednoj državi, brz pristup
 
 void addTeam();
 void addJudge();
@@ -26,9 +26,9 @@ string welcome_msg = "1. Add new team \n2. Add new judge \n3. Add new league \n4
 
 int main(int argc, char **argv) {
 	srand(time(NULL));
+
 	int choice;
 	do{
-
 		try{
 			cout<<welcome_msg<<endl;
 			cin>>choice;
@@ -68,14 +68,23 @@ int main(int argc, char **argv) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void addTeam(){
 	string a,b,c,d;
-	cout<<"Enter name: ";
-	getline(cin,a);
-	cout<<"Country: ";
-	getline(cin,b);
-	cout<<"city: ";
-	getline(cin,c);
-	cout<<"Stadion name: ";
-	getline(cin,d);
+
+	while(a.empty()){
+		cout<<"Enter name: ";
+		getline(cin,a);
+	}
+	while(b.empty()){
+		cout<<"Country: ";
+		getline(cin,b);
+	}
+	while(c.empty()){
+		cout<<"city: ";
+		getline(cin,c);
+	}
+	while(d.empty()){
+		cout<<"Stadion name: ";
+		getline(cin,d);
+	}
 	Team temp(a,b,c,d);
 	string n;
 
@@ -94,13 +103,21 @@ void addTeam(){
 }
 
 void addJudge(){
-	Judge temp;
+	string n,l,c;
+	while(n.empty()){
 	cout<<"Enter judge name: ";
-	getline(cin,temp.name);
+	getline(cin,n);
+	}
+	while(l.empty()){
 	cout<<"Lastname: ";
-	getline(cin,temp.lastName);
+	getline(cin,l);
+	}
+	while(c.empty()){
 	cout<<"Country he is comeing from: ";
-	getline(cin,temp.country);
+	getline(cin,c);
+	}
+	Judge temp(n,l,c);
+
 
 	bool exist = false;
 	for(unsigned int i=0; i<judges.size(); ++i){
@@ -119,10 +136,14 @@ void addJudge(){
 void addLeague(){
 	try{
 		string n,c;
-		cout<<"Enter name: ";
-		getline(cin,n);
-		cout<<"Country of league: ";
-		getline(cin,c);
+		while(n.empty()){
+			cout<<"Enter name: ";
+			getline(cin,n);
+		}
+		while(c.empty()){
+			cout<<"Country of league: ";
+			getline(cin,c);
+		}
 		League l(n,c);
 
 		if(leagues.size()){
@@ -195,23 +216,17 @@ void playMatch(){
 			}
 			if(a>b){
 				iter->second.getTms()[index1].addPoints(3);
-				int a = 3;
-				it->team1.addPoints(a);
 			}
 			else if(b>a){
-				it->team2.points+=3;
 				iter->second.getTms()[index2].addPoints(3);
 			}
 			else{
-				it->team1.points+=1;
-				it->team2.points+=1;
 				iter->second.getTms()[index1].addPoints(1);
 				iter->second.getTms()[index2].addPoints(1);
 			}
 
 			iter->second.getNotPlayedMatches().front().result = rez;
-			Match c = iter->second.getNotPlayedMatches().front();
-			iter->second.getPlayedMatches().push_back(c);
+			iter->second.getPlayedMatches().push_back(*it);
 			iter->second.getNotPlayedMatches().erase(it);
 			cout<<"Match finished!"<<endl<<endl;
 
@@ -242,7 +257,7 @@ void cancelLastMatch(){
 		return;
 	}else{
 		auto r = leagues.equal_range(c);
-		cout<<"Enter league name: "<<endl;
+		cout<<"Enter league name: ";
 		string n;
 		getline(cin,n);
 		bool exist = false;
@@ -277,10 +292,10 @@ void printTeamInfo(){
 			for(size_t i= 0; i<it2->second.getTms().size(); ++i){
 				if(it2->second.getTms()[i].name == n){
 					cout<<"\nName: "<<it2->second.getTms()[i].name<<endl;
-					cout<<"\nCountry: "<<it->second.getTms()[i].country<<endl;
-					cout<<"\nCity: "<<it->second.getTms()[i].city<<endl;
-					cout<<"\nStadion: "<<it->second.getTms()[i].stadionName<<endl;
-					cout<<"\nPoints: "<<it->second.getTms()[i].points<<endl<<endl;
+					cout<<"Country: "<<it->second.getTms()[i].country<<endl;
+					cout<<"City: "<<it->second.getTms()[i].city<<endl;
+					cout<<"Stadion: "<<it->second.getTms()[i].stadionName<<endl;
+					cout<<"Points: "<<it->second.getTms()[i].points<<endl<<endl;
 					it2->second.printTeamPlayedMatches(n);
 					it2->second.printTeamNotPlayedMatches(n);
 					teamExist = true;
@@ -294,12 +309,12 @@ void printTeamInfo(){
 }
 
 void dispResTable(){
-	cout<<"Enter country of league: "<<endl;
+	cout<<"Enter country of league: ";
 	string s;;
 	getline(cin,s);
 	auto it = leagues.find(s);
 	if(it != leagues.end()){
-		cout<<"Enter league name: "<<endl;
+		cout<<"Enter league name: ";
 		string l;
 		getline(cin,l);
 		auto r = leagues.equal_range(s);
@@ -312,4 +327,3 @@ void dispResTable(){
 	else
 		cout<<"No such country in league!"<<endl<<endl;
 }
-

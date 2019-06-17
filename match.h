@@ -19,7 +19,6 @@ struct Match{
 	Judge mainJudge;
 	Judge helpJudge;
 	Date date;
-	//std::string result;
 	std::pair<int,int> result;
 
 	Match() = default;

@@ -19,7 +19,7 @@ class League{
 private:
 	std::string name;
 	std::string country;
-	std::vector <Team> tms;
+	std::vector <Team> tms;				// brz pristup el ( operator [] ), nema potrebe za brisanjem
 	std::vector<Match> playedMatches;	// umjesto stack zbog potrebe prolaska kroz cijelu kolekciju
 	std::list<Match> notPlayedMatches; // umjesto queue iz istog razloga
 

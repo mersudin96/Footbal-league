@@ -69,10 +69,10 @@ void League::generateMatches(){
 void League::printNextScheduledMatch() const {
 	if(notPlayedMatches.size()){
 		Match m = notPlayedMatches.front();
-		int sizeT1 = m.team1.name.size();
-		int sizeT2 = m.team2.name.size();
-		int sizeMJ = m.mainJudge.name.size();
-		int sizeHJ = m.helpJudge.name.size();
+		int sizeT1 = (m.team1.name.size() < 6) ? 6 : m.team1.name.size();
+		int sizeT2 = (m.team2.name.size() < 6) ? 6 : m.team2.name.size();
+		int sizeMJ = (m.mainJudge.name.size()) < 6 ? 6 : m.mainJudge.name.size();
+		int sizeHJ = (m.helpJudge.name.size() < 6) ? 6 : m.helpJudge.name.size();
 		string s = "    ";
 		string s1(sizeT1+s.size()-5, ' ');
 		string s2(sizeT2+s.size()-5, ' ');
@@ -141,12 +141,10 @@ void League::cancelLastMatch(){
 		Match a = playedMatches[playedMatches.size()-1];
 		int index;
 		if(a.result.first>a.result.second){
-			a.team1.removePoints(3);
 			index = indexOfTeam(a.team1.name);
 			tms[index].removePoints(3);
 		}
 		else{
-			a.team2.removePoints(3);
 			index = indexOfTeam(a.team2.name);
 			tms[index].removePoints(3);
 		}
@@ -233,6 +231,7 @@ int League::longestTeamName(){
 		if(tms[i].name.size()>max)
 			max = tms[i].name.size();
 	}
+	if (max<6) max = 6;
 	return max;
 }
 
@@ -242,6 +241,7 @@ int League::longestJudgeName(){
 		if(judges[i].name.size()>max)
 			max = judges[i].name.size();
 	}
+	if (max<6) max = 6;
 	return max;
 }
 

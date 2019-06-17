@@ -5,8 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../league.cpp \
-../main.cpp \
-../test.cpp 
+../main.cpp 
 
 O_SRCS += \
 ../league.o \
@@ -14,13 +13,11 @@ O_SRCS += \
 
 OBJS += \
 ./league.o \
-./main.o \
-./test.o 
+./main.o 
 
 CPP_DEPS += \
 ./league.d \
-./main.d \
-./test.d 
+./main.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -17,6 +17,7 @@ struct Judge{
 	Judge() = default;
 	Judge(const Judge& o) : name(o.name), lastName(o.lastName), country(o.country) {}
 	Judge(std::string n, std::string l) : name(n), lastName(l) {}
+	Judge(std::string n, std::string l, std::string c) : name(n), lastName(l), country(c) {}
 
 	bool operator==(const Judge& o){
 		return (name == o.name && lastName == o.lastName && o.country == country);
